@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Consume LIDAR measurement file and create an image for display.
+Consume LIDAR measurement = Robot position sent to server over MQTT
  
 Written by Denis FOLLEREAU
 Copyright (c) 2021
