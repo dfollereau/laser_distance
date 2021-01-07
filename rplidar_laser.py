@@ -2,10 +2,8 @@
 Consume LIDAR measurement file and create an image for display.
  
 Written by Denis FOLLEREAU
-Copyright (c) 2021 potagerconnecte.fr
+Copyright (c) 2021
 Licensed under the MIT license.
- 
-All text above must be included in any redistribution.
 """
 # RPLIDAR example: https://learn.adafruit.com/slamtec-rplidar-on-pi?view=all
 
@@ -103,12 +101,6 @@ def process_data(data, max_distance):
 
     for angle in range(360):
         distance = data[angle]
-        #if distance > 0:                  # ignore initially ungathered data points
-        #    max_distance = max([min([5000, distance]), max_distance])
-        #    radians = angle * pi / 180.0
-        #    x = distance * cos(radians)
-        #    y = distance * sin(radians)
-        #    point = (160 + int(x / max_distance * 119), 120 + int(y / max_distance * 119))
         if angle==0:
             front = distance / 10
         if angle==90:
