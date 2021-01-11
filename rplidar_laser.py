@@ -19,6 +19,7 @@ import paho.mqtt.client as mqtt
 from config import *
 import logging_config
 import logging
+import json
 
 def lcd_init():
     lcd_write(0x33,LCD_CMD) # Initialize
@@ -82,27 +83,32 @@ def process_data(data, max_distance):
     back = 0
     left = 0
     laser_measures = []
+    measures_dict = '{"front": 0,"right": 0,"back": 0,"left": 0}'
+    jmeasures=json.loads(measures_dict)
 
     for angle in range(360):
         distance = data[angle]
         if angle==0:
             front = int(distance / 10)
             laser_measures.append(front)
+            jmeasures["front"] = front
         if angle==90:
             right = int(distance / 10)
             laser_measures.append(right)
+            jmeasures["right"] = right
         if angle==180:
             back = int(distance / 10)
             laser_measures.append(back)
+            jmeasures["back"] = back
         if angle==270:
             left = int(distance / 10)
             laser_measures.append(left)
-        #print(str(angle) + " " + str(distance))
+            jmeasures["left"] = left
 
-    logging.debug("**** RPLIDAR measures **** : [FRONT: "+str(front)+"cm] [RIGHT: "+str(right)+"cm] [BACK: "+str(back)+"cm] [LEFT: "+str(left)+"cm]")
+    logging.debug("**** RPLIDAR measures **** : [FRONT: "+str(front)+"cm] [RIGHT: "+str(right)+"cm] [BACK: "+str(back)+"cm] [LEFT: "+str(left)+"cm] -- JSON:"+json.dumps(jmeasures))
     lcd_text("F:"+str(front)+"cm R:"+str(right)+"cm", LCD_LINE_1)
     lcd_text("B:"+str(back)+"cm L:"+str(left)+"cm", LCD_LINE_2)
-    return laser_measures
+    return json.dumps(jmeasures)
 
 def GPIO_setup():
     GPIO.setwarnings(False)
@@ -133,15 +139,13 @@ if __name__ == "__main__":
     client.connect(RPI3_MQTT_BROKER_IP, RPI3_MQTT_BROKER_PORT, 60)
 
     try:
-        print(lidar.info) # printed once! Laser device infos
+        logging.debug(lidar.info) # printed once! Laser device infos
 
         for scan in lidar.iter_scans():
             for (_, angle, distance) in scan:
                 scan_data[min([359, floor(angle)])] = distance
-            laser = process_data(scan_data, max_distance)
-            mqtt_buf = ','.join(str(e) for e in laser)
-            #print(mqtt_buf)
-            client.publish("laser", mqtt_buf)
+            laser = json.loads(process_data(scan_data, max_distance))
+            client.publish("laser", json.dumps(laser))
 
     except KeyboardInterrupt:
         print ("\nCtrl-C pressed from on_message()  Stopping GPIO and exiting properly...")
