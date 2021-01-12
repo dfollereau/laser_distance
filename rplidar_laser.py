@@ -125,6 +125,12 @@ if __name__ == "__main__":
     if(sys.version_info[0] < 3):
         raise Exception("Must be using Python 3")
 
+    last_laser_front = 0
+    last_laser_right = 0
+    last_laser_back = 0
+    last_laser_left = 0
+    last_time = time.time()
+
     logging_config.debug_disable()
     # used to scale data to fit on the screen
     max_distance = 0
@@ -145,7 +151,14 @@ if __name__ == "__main__":
             for (_, angle, distance) in scan:
                 scan_data[min([359, floor(angle)])] = distance
             laser = json.loads(process_data(scan_data, max_distance))
-            client.publish("laser", json.dumps(laser))
+            if( (laser["front"] != last_laser_front) or (laser["right"] != last_laser_right) or (laser["back"] != last_laser_back) or (laser["left"] != last_laser_left) ):
+                if( (time.time()-last_time) > 0.5 ):
+                    client.publish("laser", json.dumps(laser))
+                    last_laser_front = laser["front"]
+                    last_laser_right = laser["right"]
+                    last_laser_back = laser["back"]
+                    last_laser_left = laser["left"]
+                    last_time = time.time()
 
     except KeyboardInterrupt:
         print ("\nCtrl-C pressed from on_message()  Stopping GPIO and exiting properly...")
